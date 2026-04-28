@@ -120,7 +120,7 @@ export default function Chat() {
       <aside style={{ width: '260px', flexShrink: 0, height: '100vh', background: 'var(--warm-white)', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div className="sidebar-header">
           <div className="logo-icon">❀</div>
-          <h1>The Companion</h1>
+          <h1>LiliLand</h1>
         </div>
 
         <div className="section">
@@ -190,9 +190,9 @@ export default function Chat() {
         </div>
 
         <div className="sidebar-footer">
-          <div className="user-avatar">S</div>
+          <div className="user-avatar">P</div>
           <div className="user-info">
-            <div className="user-name">Seraphina</div>
+            <div className="user-name">Profile</div>
             <div className="user-tier">Standard Membership</div>
           </div>
           <button className="settings-btn" onClick={handleLogout}>
@@ -215,12 +215,12 @@ export default function Chat() {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
               </svg>
-              <p>Start a conversation with Lekhaaha</p>
+              <p>Start a conversation with Lili</p>
             </div>
           )}
 
           <div className="quote-bar">
-            "Every word exchanged is a thread in our tapestry."
+
           </div>
 
           <AnimatePresence>
