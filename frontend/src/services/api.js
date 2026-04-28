@@ -29,14 +29,20 @@ export const authAPI = {
 };
 
 export const chatAPI = {
-  sendMessage: (message, tone = "witty", warmth = 0.7) =>
-    api.post('/chat/send', { message, tone, warmth }),
-  
-  getHistory: (limit = 50) =>
-    api.get(`/chat/history?limit=${limit}`),
-  
-  clearChat: () =>
-    api.delete('/chat/clear'),
+  newConversation: () =>
+    api.post('/chat/new'),
+
+  listConversations: () =>
+    api.get('/chat/conversations'),
+
+  sendMessage: (message, tone = "witty", warmth = 0.7, conversation_id = null) =>
+    api.post('/chat/send', { message, tone, warmth, conversation_id }),
+
+  getHistory: (conversation_id, limit = 50) =>
+    api.get(`/chat/history?conversation_id=${conversation_id}&limit=${limit}`),
+
+  clearChat: (conversation_id) =>
+    api.delete(`/chat/clear?conversation_id=${conversation_id}`),
 };
 
 export const userAPI = {

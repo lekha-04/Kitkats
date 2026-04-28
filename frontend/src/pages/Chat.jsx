@@ -22,7 +22,8 @@ const MEMORIES = [
 
 export default function Chat() {
   const [messages, setMessages] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [conversations, setConversations] = useState([]);
+  const [activeConvId, setActiveConvId] = useState(null);
   const [isTyping, setIsTyping] = useState(false);
   const [selectedTone, setSelectedTone] = useState('witty');
   const [warmth, setWarmth] = useState(0.7);
@@ -31,50 +32,73 @@ export default function Chat() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/login');
-      return;
-    }
-    loadHistory();
+    if (!token) { navigate('/login'); return; }
+    loadConversations();
   }, [navigate]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
-  const loadHistory = async () => {
+  const loadConversations = async () => {
     try {
-      const { data } = await chatAPI.getHistory(50);
+      const { data } = await chatAPI.listConversations();
+      setConversations(data);
+      if (data.length > 0) {
+        selectConversation(data[0].id);
+      }
+    } catch (err) {
+      console.error('Failed to load conversations');
+    }
+  };
+
+  const selectConversation = async (convId) => {
+    setActiveConvId(convId);
+    setMessages([]);
+    try {
+      const { data } = await chatAPI.getHistory(convId);
       setMessages(data.messages);
     } catch (err) {
       console.error('Failed to load history');
     }
   };
 
+  const handleNewChat = async () => {
+    try {
+      const { data } = await chatAPI.newConversation();
+      const newConv = { id: data.conversation_id, title: data.title, preview: 'No messages yet', updated_at: new Date().toISOString() };
+      setConversations((prev) => [newConv, ...prev]);
+      setActiveConvId(data.conversation_id);
+      setMessages([]);
+    } catch (err) {
+      console.error('Failed to create new conversation');
+    }
+  };
+
   const handleSend = async (message) => {
-    const userMsg = {
-      role: 'user',
-      content: message,
-      timestamp: new Date().toISOString(),
-    };
+    const userMsg = { role: 'user', content: message, timestamp: new Date().toISOString() };
     setMessages((prev) => [...prev, userMsg]);
     setIsTyping(true);
 
     try {
-      const { data } = await chatAPI.sendMessage(message, selectedTone, warmth);
-      const aiMsg = {
-        role: 'assistant',
-        content: data.reply,
-        timestamp: data.timestamp,
-      };
+      const { data } = await chatAPI.sendMessage(message, selectedTone, warmth, activeConvId);
+      const aiMsg = { role: 'assistant', content: data.reply, timestamp: data.timestamp };
       setMessages((prev) => [...prev, aiMsg]);
+
+      // Update conversation list (title + preview)
+      setConversations((prev) => prev.map((c) =>
+        c.id === data.conversation_id
+          ? { ...c, title: message.length <= 40 ? message : message.slice(0, 40), preview: data.reply.slice(0, 50), updated_at: data.timestamp }
+          : c
+      ));
+
+      if (!activeConvId) setActiveConvId(data.conversation_id);
     } catch (err) {
-      const errorMsg = {
+      setMessages((prev) => [...prev, {
         role: 'assistant',
         content: "I'm sorry, something went wrong. Let's try again.",
         timestamp: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, errorMsg]);
+      }]);
     } finally {
       setIsTyping(false);
     }
@@ -87,23 +111,10 @@ export default function Chat() {
   };
 
   return (
-    <div style={{
-      display: 'flex',
-      height: '100vh',
-      overflow: 'hidden',
-      background: 'var(--cream)'
-    }}>
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--cream)' }}>
+
       {/* LEFT SIDEBAR */}
-      <aside style={{
-        width: '260px',
-        flexShrink: 0,
-        height: '100vh',
-        background: 'var(--warm-white)',
-        borderRight: '1px solid var(--border)',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden'
-      }}>
+      <aside style={{ width: '260px', flexShrink: 0, height: '100vh', background: 'var(--warm-white)', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div className="sidebar-header">
           <div className="logo-icon">❀</div>
           <h1>The Companion</h1>
@@ -127,6 +138,44 @@ export default function Chat() {
           </div>
         </div>
 
+        <div className="section">
+          <div className="section-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            Conversations
+            <motion.button
+              onClick={handleNewChat}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', lineHeight: 1 }}
+              title="New Chat"
+            >
+              +
+            </motion.button>
+          </div>
+        </div>
+
+        <div className="conversation-list" style={{ flex: 1, overflowY: 'auto' }}>
+          {conversations.map((conv) => (
+            <motion.div
+              key={conv.id}
+              className={`conv-item ${activeConvId === conv.id ? 'active' : ''}`}
+              onClick={() => selectConversation(conv.id)}
+              whileHover={{ x: 3 }}
+              style={{ cursor: 'pointer' }}
+            >
+              <div className="conv-icon">💬</div>
+              <div style={{ overflow: 'hidden' }}>
+                <div className="conv-title" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{conv.title}</div>
+                <div className="conv-preview" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{conv.preview}</div>
+              </div>
+            </motion.div>
+          ))}
+          {conversations.length === 0 && (
+            <div style={{ padding: '12px 16px', fontSize: '12px', color: 'var(--text-muted)' }}>
+              No conversations yet. Hit + to start.
+            </div>
+          )}
+        </div>
+
         <div className="sidebar-footer">
           <div className="user-avatar">S</div>
           <div className="user-info">
@@ -144,18 +193,9 @@ export default function Chat() {
       </aside>
 
       {/* MIDDLE COLUMN */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100vh',
-        overflow: 'hidden',
-        background: 'var(--cream)'
-      }}>
-        {/* CHAT HEADER */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', background: 'var(--cream)' }}>
         <Header onLogout={handleLogout} />
 
-        {/* MESSAGES AREA - ONLY THIS SCROLLS */}
         <div className="chat-messages">
           {messages.length === 0 && !isTyping && (
             <div className="empty-chat">
@@ -172,52 +212,26 @@ export default function Chat() {
 
           <AnimatePresence>
             {messages.map((msg, index) => (
-              <ChatBubble
-                key={index}
-                message={msg}
-                isUser={msg.role === 'user'}
-              />
+              <ChatBubble key={index} message={msg} isUser={msg.role === 'user'} />
             ))}
           </AnimatePresence>
 
           {isTyping && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <LoadingDots />
             </motion.div>
           )}
-          
+
           <div ref={messagesEndRef} />
         </div>
 
-        {/* INPUT AREA - FIXED AT BOTTOM */}
-        <ChatInput 
-          onSend={handleSend} 
-          disabled={isTyping}
-          warmth={warmth}
-          onWarmthChange={setWarmth}
-        />
+        <ChatInput onSend={handleSend} disabled={isTyping} warmth={warmth} onWarmthChange={setWarmth} />
       </div>
 
       {/* RIGHT SIDEBAR */}
-      <aside style={{
-        width: '280px',
-        flexShrink: 0,
-        height: '100vh',
-        background: 'var(--warm-white)',
-        borderLeft: '1px solid var(--border)',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden'
-      }}>
+      <aside style={{ width: '280px', flexShrink: 0, height: '100vh', background: 'var(--warm-white)', borderLeft: '1px solid var(--border)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div className="memories-header">
-          <h3>
-            Memories 
-            <span className="beta-badge">Beta</span>
-          </h3>
+          <h3>Memories <span className="beta-badge">Beta</span></h3>
           <p>Details I hold dear to my heart.</p>
         </div>
 
