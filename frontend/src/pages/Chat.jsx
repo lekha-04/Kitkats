@@ -14,6 +14,12 @@ const TONES = [
   { id: 'poetic', icon: '📖', label: 'Poetic & Dreamy' },
 ];
 
+const MEMORIES = [
+  { category: 'Preference', text: 'Loves Earl Grey with a hint of lavender', time: 'Shared on Oct 12' },
+  { category: 'Interest', text: 'Fascinated by vintage poetry and classical music', time: 'Shared on Oct 10' },
+  { category: 'Life Event', text: 'Recently started a new chapter in their career', time: 'Shared on Oct 8' },
+];
+
 export default function Chat() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
