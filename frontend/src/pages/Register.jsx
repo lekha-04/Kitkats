@@ -37,7 +37,7 @@ export default function Register() {
         transition={{ duration: 0.4 }}
       >
         <div className="auth-logo">
-          <h1>CompanionAI</h1>
+          <h1>LiliLand</h1>
           <p>Create your account</p>
         </div>
 

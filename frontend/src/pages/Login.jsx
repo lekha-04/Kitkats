@@ -37,7 +37,7 @@ export default function Login() {
       >
         <div className="auth-logo">
           <h1>LiliLand</h1>
-          <p>Your caring AI friend</p>
+          <p>Where gentle conversations unfold</p>
         </div>
 
         {error && <div className="error-message">{error}</div>}
