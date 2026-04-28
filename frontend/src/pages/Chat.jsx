@@ -18,7 +18,7 @@ const TONE_THEME = {
   witty:    { bg: '#fef3e8', accent: '#c9934a', accentLight: '#f5e6d3' },
   romantic: { bg: '#fde8ed', accent: '#e8516a', accentLight: '#f9d8de' },
   sincere:  { bg: '#e8f4fd', accent: '#4a90c9', accentLight: '#d0e8f7' },
-  poetic:   { bg: '#f0ebf8', accent: '#8b6abf', accentLight: '#e0d5f5' },
+  poetic:   { bg: '#edd5e8', accent: '#9b3a6e', accentLight: '#f2c4d8' },
 };
 
 export default function Chat() {
