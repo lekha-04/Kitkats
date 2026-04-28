@@ -8,11 +8,18 @@ import LoadingDots from '../components/LoadingDots';
 import { chatAPI } from '../services/api';
 
 const TONES = [
-  { id: 'witty', icon: '✨', label: 'Witty & Charming' },
+  { id: 'witty',    icon: '✨', label: 'Witty & Charming' },
   { id: 'romantic', icon: '🤍', label: 'Romantic & Tender' },
-  { id: 'sincere', icon: '🎭', label: 'Sincere & Deep' },
-  { id: 'poetic', icon: '📖', label: 'Poetic & Dreamy' },
+  { id: 'sincere',  icon: '🎭', label: 'Sincere & Deep' },
+  { id: 'poetic',   icon: '📖', label: 'Poetic & Dreamy' },
 ];
+
+const TONE_THEME = {
+  witty:    { bg: '#fef3e8', accent: '#c9934a', accentLight: '#f5e6d3' },
+  romantic: { bg: '#fde8ed', accent: '#e8516a', accentLight: '#f9d8de' },
+  sincere:  { bg: '#e8f4fd', accent: '#4a90c9', accentLight: '#d0e8f7' },
+  poetic:   { bg: '#f0ebf8', accent: '#8b6abf', accentLight: '#e0d5f5' },
+};
 
 export default function Chat() {
   const [messages, setMessages] = useState([]);
@@ -104,8 +111,10 @@ export default function Chat() {
     navigate('/login');
   };
 
+  const theme = TONE_THEME[selectedTone];
+
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--cream)' }}>
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: theme.bg, transition: 'background 0.5s ease' }}>
 
       {/* LEFT SIDEBAR */}
       <aside style={{ width: '260px', flexShrink: 0, height: '100vh', background: 'var(--warm-white)', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -117,18 +126,28 @@ export default function Chat() {
         <div className="section">
           <div className="section-label">Social Grace & Tone</div>
           <div className="tone-list">
-            {TONES.map((tone) => (
-              <motion.div
-                key={tone.id}
-                className={`tone-item ${selectedTone === tone.id ? 'selected' : ''}`}
-                onClick={() => setSelectedTone(tone.id)}
-                whileHover={{ x: 4 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <span>{tone.icon}</span>
-                <span>{tone.label}</span>
-              </motion.div>
-            ))}
+            {TONES.map((tone) => {
+              const t = TONE_THEME[tone.id];
+              const isSelected = selectedTone === tone.id;
+              return (
+                <motion.div
+                  key={tone.id}
+                  className="tone-item"
+                  onClick={() => setSelectedTone(tone.id)}
+                  whileHover={{ x: 4 }}
+                  whileTap={{ scale: 0.98 }}
+                  style={{
+                    background: isSelected ? t.accentLight : 'transparent',
+                    color: isSelected ? t.accent : 'var(--text-secondary)',
+                    fontWeight: isSelected ? 500 : 400,
+                    transition: 'all 0.3s ease',
+                  }}
+                >
+                  <span>{tone.icon}</span>
+                  <span>{tone.label}</span>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
 
@@ -187,7 +206,7 @@ export default function Chat() {
       </aside>
 
       {/* MIDDLE COLUMN */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', background: 'var(--cream)' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', background: theme.bg, transition: 'background 0.5s ease' }}>
         <Header onLogout={handleLogout} />
 
         <div className="chat-messages">
@@ -196,7 +215,7 @@ export default function Chat() {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
               </svg>
-              <p>Start a conversation with Eloise</p>
+              <p>Start a conversation with Lekhaaha</p>
             </div>
           )}
 
