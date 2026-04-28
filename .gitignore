@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.egg-info/
+dist/
+build/
+
+# Virtual environment
+venv/
+env/
+bin/
+lib/
+include/
+pyvenv.cfg
+.venv/
+.env
+.env.*
+
+# Database
+*.db
+*.sqlite3
+
+# ChromaDB
+backend/chroma_data/
+
+# Logs
+*.log
+logs/
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# macOS
+.DS_Store
+
+# IDE & Shell
+.vscode/
+.idea/
+*.swp
+*.swo
+.fish/
+*.fish

@@ -5,10 +5,7 @@ passlib[bcrypt]==1.7.4
 python-multipart==0.0.6
 pydantic==2.5.3
 sqlalchemy==2.0.25
-chromadb==0.5.0
-openai==1.10.0
-ollama==0.1.0
+chromadb==0.6.3
 python-dotenv==1.0.0
 pydantic-settings==2.1.0
-numpy==1.26.4
 openapi-schema-pydantic

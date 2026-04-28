@@ -1,0 +1,49 @@
+name: API Security Scan
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch: # Allows manual trigger
+
+permissions:
+  security-events: write
+  contents: read
+  pull-requests: write
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Run NexVeil API Security Scan
+      - name: Run NexVeil API Security Scan
+        uses: Secoraa/Secoraa-platform@main
+        with:
+          target-url: ${{ secrets.NEXVEIL_TARGET_URL }}
+          openapi-spec: ./openapi.json
+          severity-threshold: HIGH
+          fail-on-findings: 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Upload SARIF to GitHub Security Tab
+      - name: Upload SARIF to GitHub
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: nexveil-api-scan.sarif
+
+      # Sync results to NexVeil Platform
+      - name: Sync to NexVeil Platform
+        if: always()
+        run: |
+          if [ -f scan-results.json ]; then
+            curl -s -X POST "${{ secrets.NEXVEIL_PLATFORM_URL }}/api/v1/ci/sync" \
+              -H "Authorization: Bearer ${{ secrets.NEXVEIL_API_KEY }}" \
+              -H "Content-Type: application/json" \
+              -d @scan-results.json
+          fi
+          
