@@ -100,8 +100,62 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/chat/new": {
+      "post": {
+        "tags": [
+          "chat"
+        ],
+        "summary": "New Conversation",
+        "operationId": "new_conversation_chat_new_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
                 "schema": {
-
+                  "$ref": "#/components/schemas/NewConversationResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/chat/conversations": {
+      "get": {
+        "tags": [
+          "chat"
+        ],
+        "summary": "List Conversations",
+        "operationId": "list_conversations_chat_conversations_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ConversationSummary"
+                  },
+                  "type": "array",
+                  "title": "Response List Conversations Chat Conversations Get"
                 }
               }
             }
@@ -160,6 +214,50 @@
         ]
       }
     },
+    "/chat/stream": {
+      "post": {
+        "tags": [
+          "chat"
+        ],
+        "summary": "Stream Message",
+        "operationId": "stream_message_chat_stream_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
     "/chat/history": {
       "get": {
         "tags": [
@@ -173,6 +271,15 @@
           }
         ],
         "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Conversation Id"
+            }
+          },
           {
             "name": "limit",
             "in": "query",
@@ -215,23 +322,87 @@
         ],
         "summary": "Clear Chat",
         "operationId": "clear_chat_chat_clear_delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Conversation Id"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
                 "schema": {
-
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
           }
-        },
+        }
+      }
+    },
+    "/chat/conversation": {
+      "delete": {
+        "tags": [
+          "chat"
+        ],
+        "summary": "Delete Conversation",
+        "operationId": "delete_conversation_chat_conversation_delete",
         "security": [
           {
             "HTTPBearer": []
           }
-        ]
+        ],
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Conversation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/user/profile": {
@@ -280,9 +451,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-
-                }
+                "schema": {}
               }
             }
           },
@@ -313,9 +482,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-
-                }
+                "schema": {}
               }
             }
           }
@@ -331,9 +498,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-
-                }
+                "schema": {}
               }
             }
           }
@@ -388,6 +553,17 @@
             ],
             "title": "Warmth",
             "default": 0.7
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
           }
         },
         "type": "object",
@@ -406,14 +582,48 @@
             "type": "string",
             "format": "date-time",
             "title": "Timestamp"
+          },
+          "conversation_id": {
+            "type": "integer",
+            "title": "Conversation Id"
           }
         },
         "type": "object",
         "required": [
           "reply",
-          "timestamp"
+          "timestamp",
+          "conversation_id"
         ],
         "title": "ChatResponse"
+      },
+      "ConversationSummary": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "preview": {
+            "type": "string",
+            "title": "Preview"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "preview",
+          "updated_at"
+        ],
+        "title": "ConversationSummary"
       },
       "HTTPValidationError": {
         "properties": {
@@ -451,6 +661,24 @@
           "timestamp"
         ],
         "title": "Message"
+      },
+      "NewConversationResponse": {
+        "properties": {
+          "conversation_id": {
+            "type": "integer",
+            "title": "Conversation Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          }
+        },
+        "type": "object",
+        "required": [
+          "conversation_id",
+          "title"
+        ],
+        "title": "NewConversationResponse"
       },
       "TokenResponse": {
         "properties": {
