@@ -1,9 +1,9 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:9000';
+const API_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:9000';
 
 const api = axios.create({
-  baseURL: BASE_URL,
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -63,7 +63,7 @@ export const chatAPI = {
 export const streamMessage = async (message, tone, warmth, conversationId, onToken, onDone, onError) => {
   const token = localStorage.getItem('token');
   try {
-    const response = await fetch(`${BASE_URL}/chat/stream`, {
+    const response = await fetch(`${API_URL}/chat/stream`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ message, tone, warmth, conversation_id: conversationId }),
