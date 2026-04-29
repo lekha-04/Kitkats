@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: kit-kat-backend
+    runtime: docker
+    rootDir: backend
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "60"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: kit-kat-db
+          property: connectionString
+      - key: CHROMA_PERSIST_DIR
+        value: /tmp/chroma_data
+      - key: CORS_ORIGINS
+        value: https://kit-kat-frontend.onrender.com,http://localhost:5173,http://localhost:3000
+      - key: MISTRAL_API_KEY
+        sync: false
+
+  - type: web
+    name: kit-kat-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://kit-kat-backend.onrender.com
+
+databases:
+  - name: kit-kat-db
+    databaseName: kitkat
+    user: kitkat
