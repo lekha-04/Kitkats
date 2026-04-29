@@ -14,7 +14,7 @@ export default function ChatBubble({ message, isUser }) {
       transition={{ duration: 0.2 }}
     >
       <div className="message-avatar">
-        E
+        L
       </div>
       <div className="message-content">
         <div className="message-bubble">{message.content}</div>
