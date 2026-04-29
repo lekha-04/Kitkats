@@ -31,6 +31,7 @@ export default function Chat() {
   const [warmth, setWarmth] = useState(0.7);
   const messagesEndRef = useRef(null);
   const navigate = useNavigate();
+  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -193,9 +194,9 @@ export default function Chat() {
         </div>
 
         <div className="sidebar-footer">
-          <div className="user-avatar">P</div>
+          <div className="user-avatar">{(currentUser.username || 'U')[0].toUpperCase()}</div>
           <div className="user-info">
-            <div className="user-name">Profile</div>
+            <div className="user-name">{currentUser.username || 'User'}</div>
             <div className="user-tier">Standard Membership</div>
           </div>
           <button className="settings-btn" onClick={handleLogout}>
