@@ -5,7 +5,7 @@ import Header from '../components/Header';
 import ChatBubble from '../components/ChatBubble';
 import ChatInput from '../components/ChatInput';
 import LoadingDots from '../components/LoadingDots';
-import { chatAPI } from '../services/api';
+import { chatAPI, streamMessage } from '../services/api';
 import princessImg from '../assets/princess.svg';
 
 const TONES = [
@@ -29,9 +29,16 @@ export default function Chat() {
   const [isTyping, setIsTyping] = useState(false);
   const [selectedTone, setSelectedTone] = useState('witty');
   const [warmth, setWarmth] = useState(0.7);
+  const [error, setError] = useState('');
   const messagesEndRef = useRef(null);
   const navigate = useNavigate();
   const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+
+  useEffect(() => {
+    if (!error) return;
+    const t = setTimeout(() => setError(''), 4000);
+    return () => clearTimeout(t);
+  }, [error]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -51,7 +58,7 @@ export default function Chat() {
         selectConversation(data[0].id);
       }
     } catch (err) {
-      console.error('Failed to load conversations');
+      setError('Failed to load conversations.');
     }
   };
 
@@ -62,7 +69,7 @@ export default function Chat() {
       const { data } = await chatAPI.getHistory(convId);
       setMessages(data.messages);
     } catch (err) {
-      console.error('Failed to load history');
+      setError('Failed to load chat history.');
     }
   };
 
@@ -74,37 +81,56 @@ export default function Chat() {
       setActiveConvId(data.conversation_id);
       setMessages([]);
     } catch (err) {
-      console.error('Failed to create new conversation');
+      setError('Failed to create conversation.');
     }
   };
 
-  const handleSend = async (message) => {
-    const userMsg = { role: 'user', content: message, timestamp: new Date().toISOString() };
-    setMessages((prev) => [...prev, userMsg]);
+  const handleSend = (message) => {
+    const now = new Date().toISOString();
+    setMessages((prev) => [
+      ...prev,
+      { role: 'user', content: message, timestamp: now },
+      { role: 'assistant', content: '', timestamp: now },
+    ]);
     setIsTyping(true);
+    setError('');
 
-    try {
-      const { data } = await chatAPI.sendMessage(message, selectedTone, warmth, activeConvId);
-      const aiMsg = { role: 'assistant', content: data.reply, timestamp: data.timestamp };
-      setMessages((prev) => [...prev, aiMsg]);
+    let resolvedConvId = activeConvId;
 
-      // Update conversation list (title + preview)
-      setConversations((prev) => prev.map((c) =>
-        c.id === data.conversation_id
-          ? { ...c, title: message.length <= 40 ? message : message.slice(0, 40), preview: data.reply.slice(0, 50), updated_at: data.timestamp }
-          : c
-      ));
-
-      if (!activeConvId) setActiveConvId(data.conversation_id);
-    } catch (err) {
-      setMessages((prev) => [...prev, {
-        role: 'assistant',
-        content: "I'm sorry, something went wrong. Let's try again.",
-        timestamp: new Date().toISOString(),
-      }]);
-    } finally {
-      setIsTyping(false);
-    }
+    streamMessage(
+      message, selectedTone, warmth, activeConvId,
+      (token, returnedConvId) => {
+        if (returnedConvId && !resolvedConvId) resolvedConvId = returnedConvId;
+        setIsTyping(false);
+        setMessages((prev) => {
+          const updated = [...prev];
+          const last = updated[updated.length - 1];
+          updated[updated.length - 1] = { ...last, content: last.content + token };
+          return updated;
+        });
+      },
+      (returnedConvId) => {
+        setIsTyping(false);
+        const finalId = returnedConvId || resolvedConvId;
+        if (finalId) {
+          if (!activeConvId) setActiveConvId(finalId);
+          setConversations((prev) => prev.map((c) =>
+            c.id === finalId
+              ? { ...c, title: message.length <= 40 ? message : message.slice(0, 40), updated_at: new Date().toISOString() }
+              : c
+          ));
+        }
+      },
+      () => {
+        setIsTyping(false);
+        setError('Message failed to send. Please try again.');
+        setMessages((prev) => {
+          const updated = [...prev];
+          updated[updated.length - 1] = { ...updated[updated.length - 1], content: "Something went wrong. Let's try again." };
+          return updated;
+        });
+      }
+    );
   };
 
   const handleLogout = () => {
@@ -117,6 +143,12 @@ export default function Chat() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: theme.bg, transition: 'background 0.5s ease' }}>
+
+      {error && (
+        <div style={{ position: 'fixed', top: '16px', left: '50%', transform: 'translateX(-50%)', background: '#ef4444', color: '#fff', padding: '10px 20px', borderRadius: '8px', zIndex: 1000, fontSize: '14px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)', whiteSpace: 'nowrap' }}>
+          {error}
+        </div>
+      )}
 
       {/* LEFT SIDEBAR */}
       <aside style={{ width: '260px', flexShrink: 0, height: '100vh', background: 'var(--warm-white)', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>

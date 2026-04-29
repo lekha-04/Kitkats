@@ -1,4 +1,5 @@
 import httpx
+import json
 from app.core.config import settings
 
 OLLAMA_BASE_URL = settings.OLLAMA_BASE_URL
@@ -41,6 +42,7 @@ TONE_PROMPTS = {
     "poetic": "Be dreamy and lyrical. Use gentle metaphors and beautiful language, but keep it brief.",
 }
 
+
 def clean_response(response: str) -> str:
     if not response:
         return "hmm..."
@@ -53,6 +55,7 @@ def clean_response(response: str) -> str:
             cleaned = cleaned[:cut + 1]
     return cleaned.strip()
 
+
 def build_messages(user_message: str, tone: str, history: list) -> list:
     tone_instruction = TONE_PROMPTS.get(tone, TONE_PROMPTS["witty"])
     system = f"{SYSTEM_PROMPT}\nCurrent tone: {tone_instruction}"
@@ -62,8 +65,97 @@ def build_messages(user_message: str, tone: str, history: list) -> list:
     messages.append({"role": "user", "content": user_message})
     return messages
 
-async def _try_ollama(messages: list) -> str | None:
-    """Try Ollama (gemma3:4b) first. Returns None if Ollama is unavailable."""
+
+async def get_ai_stream(messages: list, warmth: float = 0.7):
+    """Async generator yielding raw tokens. Mistral first, Ollama fallback."""
+    # --- Mistral streaming ---
+    if settings.MISTRAL_API_KEY:
+        has_content = False
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                async with client.stream(
+                    "POST", MISTRAL_API_URL,
+                    headers={"Authorization": f"Bearer {settings.MISTRAL_API_KEY}", "Content-Type": "application/json"},
+                    json={
+                        "model": MISTRAL_MODEL,
+                        "messages": messages,
+                        "temperature": warmth,
+                        "max_tokens": 80,
+                        "top_p": 0.9,
+                        "stream": True,
+                    },
+                ) as resp:
+                    resp.raise_for_status()
+                    async for line in resp.aiter_lines():
+                        if line.startswith("data: ") and line.strip() != "data: [DONE]":
+                            try:
+                                data = json.loads(line[6:])
+                                token = data["choices"][0]["delta"].get("content", "")
+                                if token:
+                                    has_content = True
+                                    yield token
+                            except Exception:
+                                pass
+            return
+        except Exception as e:
+            if has_content:
+                return  # partial stream already sent — don't restart
+            print(f"Mistral stream failed, trying Ollama: {e}")
+
+    # --- Ollama streaming fallback ---
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            async with client.stream(
+                "POST", f"{OLLAMA_BASE_URL}/api/chat",
+                json={
+                    "model": OLLAMA_MODEL,
+                    "messages": messages,
+                    "stream": True,
+                    "options": {
+                        "temperature": warmth,
+                        "top_p": 0.9,
+                        "num_predict": 80,
+                        "repeat_penalty": 1.1,
+                    },
+                },
+            ) as resp:
+                resp.raise_for_status()
+                async for line in resp.aiter_lines():
+                    if line:
+                        try:
+                            data = json.loads(line)
+                            if not data.get("done"):
+                                token = data.get("message", {}).get("content", "")
+                                if token:
+                                    yield token
+                        except Exception:
+                            pass
+    except Exception as e:
+        print(f"Ollama stream also failed: {e}")
+
+
+async def _try_mistral(messages: list, warmth: float) -> str | None:
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                MISTRAL_API_URL,
+                headers={"Authorization": f"Bearer {settings.MISTRAL_API_KEY}", "Content-Type": "application/json"},
+                json={
+                    "model": MISTRAL_MODEL,
+                    "messages": messages,
+                    "temperature": warmth,
+                    "max_tokens": 80,
+                    "top_p": 0.9,
+                },
+            )
+            response.raise_for_status()
+            return response.json()["choices"][0]["message"]["content"].strip()
+    except Exception as e:
+        print(f"Mistral API failed: {e}")
+        return None
+
+
+async def _try_ollama(messages: list, warmth: float) -> str | None:
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
@@ -73,54 +165,31 @@ async def _try_ollama(messages: list) -> str | None:
                     "messages": messages,
                     "stream": False,
                     "options": {
-                        "temperature": 0.85,
+                        "temperature": warmth,
                         "top_p": 0.9,
                         "num_predict": 80,
-                        "repeat_penalty": 1.1
-                    }
-                }
+                        "repeat_penalty": 1.1,
+                    },
+                },
             )
             response.raise_for_status()
             return response.json()["message"]["content"].strip()
     except Exception as e:
-        print(f"Ollama unavailable, falling back to Mistral: {e}")
+        print(f"Ollama unavailable: {e}")
         return None
 
-async def _try_mistral(messages: list) -> str | None:
-    """Fallback to Mistral API. Returns None if also unavailable."""
-    try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(
-                MISTRAL_API_URL,
-                headers={
-                    "Authorization": f"Bearer {settings.MISTRAL_API_KEY}",
-                    "Content-Type": "application/json"
-                },
-                json={
-                    "model": MISTRAL_MODEL,
-                    "messages": messages,
-                    "temperature": 0.85,
-                    "max_tokens": 80,
-                    "top_p": 0.9
-                }
-            )
-            response.raise_for_status()
-            return response.json()["choices"][0]["message"]["content"].strip()
-    except Exception as e:
-        print(f"Mistral API also failed: {e}")
-        return None
 
-async def get_ai_response(user_message: str, conversation_history: list, tone: str = "witty") -> str:
+async def get_ai_response(user_message: str, conversation_history: list, tone: str = "witty", warmth: float = 0.7) -> str:
     messages = build_messages(user_message, tone, conversation_history)
 
-    raw = await _try_ollama(messages) or await _try_mistral(messages)
+    # Mistral first (fast API), Ollama fallback (local CPU)
+    raw = await _try_mistral(messages, warmth) or await _try_ollama(messages, warmth)
 
     if raw:
         cleaned = clean_response(raw)
         if cleaned:
             return cleaned
 
-    # Both failed — smart static fallback
     msg = user_message.lower().strip()
     if msg in ["hi", "hey", "hello", "yo", "sup"]:
         return "hey 🙂"
