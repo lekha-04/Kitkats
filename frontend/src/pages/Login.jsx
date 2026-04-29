@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { authAPI } from '../services/api';
+import CastleBackground from '../components/CastleBackground';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -29,21 +30,30 @@ export default function Login() {
 
   return (
     <div className="auth-page">
+      <CastleBackground />
+
       <motion.div
-        className="auth-card"
-        initial={{ opacity: 0, y: 20 }}
+        className="glass-card"
+        initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
+        transition={{ duration: 0.5 }}
       >
-        <div className="auth-logo">
+        <div className="glass-logo">
+          <motion.div
+            animate={{ y: [0, -6, 0] }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+            style={{ fontSize: '36px', marginBottom: '10px' }}
+          >
+            ✨
+          </motion.div>
           <h1>LiliLand</h1>
           <p>Where gentle conversations unfold</p>
         </div>
 
-        {error && <div className="error-message">{error}</div>}
+        {error && <div className="glass-error">{error}</div>}
 
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
+          <div className="glass-input-group">
             <label>Email</label>
             <input
               type="email"
@@ -54,7 +64,7 @@ export default function Login() {
             />
           </div>
 
-          <div className="form-group">
+          <div className="glass-input-group">
             <label>Password</label>
             <input
               type="password"
@@ -67,16 +77,16 @@ export default function Login() {
 
           <motion.button
             type="submit"
-            className="btn-primary"
+            className="glass-btn"
             disabled={loading}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
           >
-            {loading ? 'Loading...' : 'Login'}
+            {loading ? 'Entering the land...' : 'Enter LiliLand'}
           </motion.button>
         </form>
 
-        <div className="auth-footer">
+        <div className="glass-footer">
           Don't have an account? <Link to="/register">Sign up</Link>
         </div>
       </motion.div>
