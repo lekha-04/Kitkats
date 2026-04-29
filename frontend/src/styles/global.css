@@ -668,6 +668,257 @@ html, body, #root {
   opacity: 0.3;
 }
 
+/* ── Girly Login Page ─────────────────────────────────── */
+.girly-page {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  overflow: hidden;
+  padding: 20px;
+  background: linear-gradient(160deg, #fce8f3 0%, #f5d6f0 25%, #e8d0f5 55%, #fad8ee 80%, #ffeaf4 100%);
+}
+
+.girly-card {
+  position: relative;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1.5px solid rgba(245, 180, 215, 0.6);
+  border-radius: 36px;
+  padding: 0 44px 40px;
+  width: 100%;
+  max-width: 410px;
+  box-shadow:
+    0 20px 60px rgba(200, 70, 130, 0.14),
+    0 4px 16px rgba(180, 60, 120, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  overflow: hidden;
+}
+
+.girly-ribbon {
+  height: 5px;
+  margin: 0 -44px 40px;
+  background: linear-gradient(90deg, #fbb6ce, #f472b6, #e879a0, #c026d3, #e879a0, #f472b6, #fbb6ce);
+  background-size: 300% 100%;
+  animation: shimmer 4s linear infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+.girly-logo {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.girly-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #fde8f5, #ffd6ee);
+  border: 2.5px solid rgba(240, 150, 200, 0.4);
+  font-size: 32px;
+  margin-bottom: 14px;
+  overflow: hidden;
+  box-shadow:
+    0 6px 20px rgba(220, 80, 150, 0.2),
+    inset 0 1px 0 rgba(255,255,255,0.8);
+}
+
+.girly-logo h1 {
+  font-family: 'Playfair Display', var(--font-serif);
+  font-size: 32px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #be185d 0%, #9d174d 50%, #831843 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 6px;
+  letter-spacing: -0.01em;
+}
+
+.girly-logo p {
+  color: #be7ca0;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  font-style: italic;
+}
+
+.girly-field {
+  margin-bottom: 16px;
+}
+
+.girly-field label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #9d4975;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.girly-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.girly-input-icon {
+  position: absolute;
+  left: 14px;
+  width: 16px;
+  height: 16px;
+  color: #d080a8;
+  pointer-events: none;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.girly-input-wrap input {
+  width: 100%;
+  height: 50px;
+  padding: 0 16px 0 42px;
+  border: 1.5px solid rgba(220, 160, 195, 0.45);
+  border-radius: 16px;
+  font-size: 15px;
+  background: rgba(255, 248, 253, 0.9);
+  color: #6b1d40;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.girly-input-wrap input::placeholder {
+  color: #d8a8c0;
+  font-style: italic;
+}
+
+.girly-input-wrap input:focus {
+  outline: none;
+  border-color: #f472b6;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(244, 114, 182, 0.12), 0 2px 8px rgba(190, 24, 93, 0.08);
+}
+
+.girly-btn {
+  width: 100%;
+  height: 52px;
+  border: none;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #f472b6 0%, #ec4899 40%, #db2777 100%);
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  font-family: inherit;
+  box-shadow:
+    0 6px 24px rgba(219, 39, 119, 0.38),
+    0 2px 8px rgba(219, 39, 119, 0.2),
+    inset 0 1px 0 rgba(255,255,255,0.2);
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+  margin-top: 8px;
+}
+
+.girly-btn:hover {
+  box-shadow:
+    0 10px 32px rgba(219, 39, 119, 0.48),
+    0 4px 12px rgba(219, 39, 119, 0.28);
+}
+
+.girly-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.girly-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 22px 0 14px;
+}
+
+.girly-divider span {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(220, 160, 200, 0.4), transparent);
+}
+
+.girly-divider p {
+  font-size: 11px;
+  color: #c090b0;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+.girly-signup-btn {
+  display: block;
+  width: 100%;
+  height: 48px;
+  border: 1.5px solid rgba(244, 114, 182, 0.5);
+  border-radius: 18px;
+  background: rgba(255, 240, 250, 0.6);
+  color: #be185d;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  line-height: 45px;
+  text-decoration: none;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  letter-spacing: 0.02em;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.girly-signup-btn:hover {
+  background: rgba(253, 232, 245, 0.9);
+  border-color: rgba(244, 114, 182, 0.8);
+  box-shadow: 0 4px 14px rgba(219, 39, 119, 0.12);
+}
+
+.girly-error {
+  background: rgba(255, 228, 238, 0.85);
+  border: 1.5px solid rgba(244, 114, 182, 0.35);
+  color: #9d174d;
+  padding: 11px 14px;
+  border-radius: 12px;
+  margin-bottom: 18px;
+  font-size: 13px;
+}
+
+.girly-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  margin-top: 26px;
+}
+
+.girly-dots span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fbb6ce, #f472b6);
+  display: inline-block;
+  animation: pulse-dot 1.8s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50%       { transform: scale(1.4); opacity: 1; }
+}
+
 /* ── Auth / Login ─────────────────────────────────────── */
 .auth-page {
   position: relative;
